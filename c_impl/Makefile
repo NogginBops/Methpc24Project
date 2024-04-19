@@ -9,12 +9,13 @@ SRCS := main.c ${HDF5_STATIC_LIB}
 
 CC := cc
 CCFlags := -o $(BINARY)
-CCFlags := $(CCFlags) -O3
+CCFlags := $(CCFlags) -O2
 CCFlags := $(CCFlags) -Wall -W
 CCFlags := $(CCFlags) -lm -lz
 CCFlags := $(CCFlags) -I$(HDF5_INCLUDE_DIR)
 # FIXME: Only add this for debug?
 CCFlags := $(CCFlags) -g
+CCFlags := $(CCFlags) -fopenmp
 
 compile: $(SRCS)
 	$(CC) $(SRCS) $(CCFlags)
