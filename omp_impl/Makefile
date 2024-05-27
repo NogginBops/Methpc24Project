@@ -18,7 +18,7 @@ CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf
 
 
 compile: $(SRCS)
-	$(CC) $(SRCS) $(CCFlags)
+	$(CC) $(SRCS) $(ARG_FLAGS) $(CCFlags)
 
 clean:
 	@rm $(BINARY)

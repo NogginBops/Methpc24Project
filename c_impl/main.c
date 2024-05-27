@@ -10,9 +10,17 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#ifndef RES_X
 #define RES_X 250
+#endif
+#ifndef RES_Y
 #define RES_Y 250
+#endif
+#ifndef RES_Z
 #define RES_Z 250
+#endif
+
+#define SCALE 0.65f
 
 #define GRID_AT(grid, dims, x, y, z) (grid)[(z) * (dims)[0] * (dims)[1] + (y) * (dims)[0] + (x)]
 
@@ -135,8 +143,6 @@ rgba_32f transfer_function(float x) {
 }
 
 int main() {
-    printf("Hello, world!\n");
-
     int ret_val = 0;
     assert(H5open() >= 0);
 
@@ -148,13 +154,15 @@ int main() {
 
         assert(H5is_library_threadsafe(&flag) >= 0);
 
-        printf("Welcome to HDF5 %d.%d.%d\n", majnum, minnum, relnum);
-        printf("Thread-safety %s\n", (flag > 0) ? "enabled" : "disabled");
+        //printf("Welcome to HDF5 %d.%d.%d\n", majnum, minnum, relnum);
+        //printf("Thread-safety %s\n", (flag > 0) ? "enabled" : "disabled");
     }
 
     {
         hsize_t dims[3];
         float* data = read_hdf5_data("../data/datacube.hdf5", "density", dims);
+
+        printf("Starting render.\n");
 
         interpolate_grid(data, dims, 0.1f, 0.5f, 0.0f);
 
@@ -166,17 +174,18 @@ int main() {
 
             // now I have the datacube!
             for (int ix = 0; ix < RES_X; ix++) {
-                int x = ix - RES_X/2;
+                float x = ((ix / (RES_X - 1.0f)) - 0.5f) * (dims[0] * SCALE);
+
                 for (int iy = 0; iy < RES_Y; iy++) {
-                    int y = iy - RES_Y/2;
+                    float y = ((iy / (RES_Y - 1.0f)) - 0.5f) * (dims[1] * SCALE);
 
                     rgba_32f sum = {0};
                     for (int iz = RES_Z - 1; iz >= 0; iz--) {
-                        int z = iz - RES_Z/2;
+                        float z = ((iz / (RES_Z - 1.0f)) - 0.5f) * (dims[2] * SCALE);
 
-                        float fx = x;
-                        float fy = y * cosf(angle) - z * sinf(angle);
-                        float fz = y * sinf(angle) + z * cosf(angle);
+                        float fx = x * cosf(angle) - z * sinf(angle);
+                        float fy = y;
+                        float fz = x * sinf(angle) + z * cosf(angle);
 
                         fx += (dims[0]/2);
                         fy += (dims[1]/2);
@@ -184,14 +193,14 @@ int main() {
 
                         float density = interpolate_grid(data, dims, fx, fy, fz);
 
-                        rgba_32f c = transfer_function(density);
+                        rgba_32f c = transfer_function(logf(density));
 
                         sum.r = c.a * c.r + (1 - c.a) * sum.r;
                         sum.g = c.a * c.g + (1 - c.a) * sum.g;
                         sum.b = c.a * c.b + (1 - c.a) * sum.b;
                     }
 
-                    image[ix * RES_Y + iy] = (rgba_8i) {
+                    image[iy * RES_X + ix] = (rgba_8i) {
                         .r = CLAMP(sum.r * 255, 0, 255),
                         .g = CLAMP(sum.g * 255, 0, 255),
                         .b = CLAMP(sum.b * 255, 0, 255),

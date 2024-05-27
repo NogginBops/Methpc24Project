@@ -12,9 +12,17 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#ifndef RES_X
 #define RES_X 250
+#endif
+#ifndef RES_Y
 #define RES_Y 250
+#endif
+#ifndef RES_Z
 #define RES_Z 250
+#endif
+
+#define SCALE 0.65f
 
 #define GRID_AT(grid, dims, x, y, z) (grid)[(z) * (dims)[0] * (dims)[1] + (y) * (dims)[0] + (x)]
 
@@ -140,8 +148,8 @@ rgba_32f transfer_function(float x) {
     };
 }
 
-#define I_TO_X(i) (i) / RES_X
-#define I_TO_Y(i) (i) % RES_X
+#define I_TO_X(i) (i) % RES_X
+#define I_TO_Y(i) (i) / RES_X
 
 run_t rank_to_run(int rank, int size) {
     run_t run;
@@ -199,16 +207,16 @@ int main(int argc, char *argv[]) {
             for(int i = 0; i < run.count; i++) {
                 int ix = I_TO_X(run.start + i);
                 int iy = I_TO_Y(run.start + i);
-                int x = ix - RES_X/2;
-                int y = iy - RES_Y/2;
+                float x = ((ix / (RES_X - 1.0f)) - 0.5f) * (dims[0] * SCALE);
+                float y = ((iy / (RES_Y - 1.0f)) - 0.5f) * (dims[1] * SCALE);
 
                 rgba_32f sum = {0};
                 for (int iz = RES_Z - 1; iz >= 0; iz--) {
-                    int z = iz - RES_Z/2;
+                    float z = ((iz / (RES_Z - 1.0f)) - 0.5f) * (dims[2] * SCALE);
 
-                    float fx = x;
-                    float fy = y * cosf(angle) - z * sinf(angle);
-                    float fz = y * sinf(angle) + z * cosf(angle);
+                    float fx = x * cosf(angle) - z * sinf(angle);
+                    float fy = y;
+                    float fz = x * sinf(angle) + z * cosf(angle);
 
                     fx += (dims[0]/2);
                     fy += (dims[1]/2);
@@ -216,7 +224,7 @@ int main(int argc, char *argv[]) {
 
                     float density = interpolate_grid(data, dims, fx, fy, fz);
 
-                    rgba_32f c = transfer_function(density);
+                    rgba_32f c = transfer_function(logf(density));
 
                     sum.r = c.a * c.r + (1 - c.a) * sum.r;
                     sum.g = c.a * c.g + (1 - c.a) * sum.g;
