@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/stat.h>
 
-#include <hdf5.h>
+#include <hdf5/serial/hdf5.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -34,13 +35,13 @@ float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
     hsize_t size;
     herr_t err = H5Fget_filesize(file, &size);
     assert(err >= 0);
-    printf("File size: %lu bytes\n", size);
+    printf("File size: %llu bytes\n", size);
 
     hid_t dataset = H5Dopen2(file, dataset_name, H5P_DEFAULT);
     assert(dataset != H5I_INVALID_HID);
 
     hsize_t storage_size = H5Dget_storage_size(dataset);
-    printf("storage_size=%lu\n", storage_size);
+    printf("storage_size=%llu\n", storage_size);
     
     hid_t datatype = H5Dget_type(dataset);
     assert(datatype != H5I_INVALID_HID);
@@ -80,7 +81,7 @@ float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
     float* data = malloc(storage_size);
     assert(H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) >= 0);
 
-    printf("Read data %id (%lix%lix%li)\n", rank, dims[0], dims[1], dims[2]);
+    printf("Read data %id (%llix%llix%lli)\n", rank, dims[0], dims[1], dims[2]);
 
     H5Dclose(dataset);
     H5Fclose(file);
@@ -199,6 +200,8 @@ int main() {
                     };
                 }
             }
+
+            mkdir("results", 0777);
 
             char name[256];
             snprintf(name, 256, "./results/result%i.png", iangle);

@@ -2,20 +2,19 @@
 
 BINARY = volume_render
 
-HDF5_INCLUDE_DIR := ../hdf5-1.14.3/hdf5/include/
-HDF5_STATIC_LIB := ../hdf5-1.14.3/hdf5/lib/libhdf5.a ../hdf5-1.14.3/hdf5/lib/libhdf5_hl.a
-
-SRCS := main.c ${HDF5_STATIC_LIB}
+SRCS := main.c
 
 CC := mpicc
 CCFlags := -o $(BINARY)
 CCFlags := $(CCFlags) -O2
 CCFlags := $(CCFlags) -Wall -W
 CCFlags := $(CCFlags) -lm -lz
-CCFlags := $(CCFlags) -I$(HDF5_INCLUDE_DIR)
 # FIXME: Only add this for debug?
 CCFlags := $(CCFlags) -g
-#CCFlags := $(CCFlags) -fopenmp
+
+# From h5cc -show
+CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
+
 
 compile: $(SRCS)
 	$(CC) $(SRCS) $(CCFlags)
