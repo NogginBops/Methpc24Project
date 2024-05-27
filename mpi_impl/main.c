@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/stat.h>
+
+#include <mpi.h>
 
 #include <hdf5.h>
 
@@ -26,6 +29,10 @@ typedef struct {
 typedef struct {
     uint8_t r, g, b, a;
 } rgba_8i;
+
+typedef struct {
+    int start, count;
+} run_t;
 
 float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
     hid_t file = H5Fopen(filepath, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -133,8 +140,36 @@ rgba_32f transfer_function(float x) {
     };
 }
 
-int main() {
-    printf("Hello, world!\n");
+#define I_TO_X(i) (i) / RES_X
+#define I_TO_Y(i) (i) % RES_X
+
+run_t rank_to_run(int rank, int size) {
+    run_t run;
+    int total_pixels = RES_X * RES_Y;
+    int rank_pixels = (total_pixels + (size - 1)) / size;
+    int start_pixel = rank * rank_pixels;
+    int last_pixel = start_pixel + rank_pixels;
+    if (last_pixel > total_pixels)
+        last_pixel = total_pixels;
+    rank_pixels = last_pixel - start_pixel;
+    run.start = start_pixel;
+    run.count = rank_pixels;
+    return run;
+}
+
+int main(int argc, char *argv[]) {
+    int provided;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
+    assert(provided == MPI_THREAD_SINGLE);
+
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    printf("Hello, world! rank=%d, size=%d\n", rank, size);
+
+    run_t run = rank_to_run(rank, size);
+    printf("rank=%d run=%d, %d\n", rank, run.start, run.count);
 
     int ret_val = 0;
     assert(H5open() >= 0);
@@ -147,67 +182,88 @@ int main() {
 
         assert(H5is_library_threadsafe(&flag) >= 0);
 
-        printf("Welcome to HDF5 %d.%d.%d\n", majnum, minnum, relnum);
-        printf("Thread-safety %s\n", (flag > 0) ? "enabled" : "disabled");
+        //printf("Welcome to HDF5 %d.%d.%d\n", majnum, minnum, relnum);
+        //printf("Thread-safety %s\n", (flag > 0) ? "enabled" : "disabled");
     }
 
     {
         hsize_t dims[3];
         float* data = read_hdf5_data("../data/datacube.hdf5", "density", dims);
 
-        interpolate_grid(data, dims, 0.1f, 0.5f, 0.0f);
-
-        rgba_8i* image = calloc(RES_X * RES_Y, sizeof(rgba_8i));
+        rgba_8i* pixels = rank == 0 ? calloc(RES_X * RES_Y, sizeof(rgba_8i)) : calloc(run.count, sizeof(rgba_8i));
 
         const int NAngles = 24;
         for (int iangle = 0; iangle < NAngles; iangle++) {
             float angle = 2 * M_PI * (iangle / (float)NAngles);
 
-            // now I have the datacube!
-            for (int ix = 0; ix < RES_X; ix++) {
+            for(int i = 0; i < run.count; i++) {
+                int ix = I_TO_X(run.start + i);
+                int iy = I_TO_Y(run.start + i);
                 int x = ix - RES_X/2;
-                for (int iy = 0; iy < RES_Y; iy++) {
-                    int y = iy - RES_Y/2;
+                int y = iy - RES_Y/2;
 
-                    rgba_32f sum = {0};
-                    for (int iz = RES_Z - 1; iz >= 0; iz--) {
-                        int z = iz - RES_Z/2;
+                rgba_32f sum = {0};
+                for (int iz = RES_Z - 1; iz >= 0; iz--) {
+                    int z = iz - RES_Z/2;
 
-                        float fx = x;
-                        float fy = y * cosf(angle) - z * sinf(angle);
-                        float fz = y * sinf(angle) + z * cosf(angle);
+                    float fx = x;
+                    float fy = y * cosf(angle) - z * sinf(angle);
+                    float fz = y * sinf(angle) + z * cosf(angle);
 
-                        fx += (dims[0]/2);
-                        fy += (dims[1]/2);
-                        fz += (dims[2]/2);
+                    fx += (dims[0]/2);
+                    fy += (dims[1]/2);
+                    fz += (dims[2]/2);
 
-                        float density = interpolate_grid(data, dims, fx, fy, fz);
+                    float density = interpolate_grid(data, dims, fx, fy, fz);
 
-                        rgba_32f c = transfer_function(density);
+                    rgba_32f c = transfer_function(density);
 
-                        sum.r = c.a * c.r + (1 - c.a) * sum.r;
-                        sum.g = c.a * c.g + (1 - c.a) * sum.g;
-                        sum.b = c.a * c.b + (1 - c.a) * sum.b;
-                    }
-
-                    image[ix * RES_Y + iy] = (rgba_8i) {
-                        .r = CLAMP(sum.r * 255, 0, 255),
-                        .g = CLAMP(sum.g * 255, 0, 255),
-                        .b = CLAMP(sum.b * 255, 0, 255),
-                        .a = 255,
-                    };
+                    sum.r = c.a * c.r + (1 - c.a) * sum.r;
+                    sum.g = c.a * c.g + (1 - c.a) * sum.g;
+                    sum.b = c.a * c.b + (1 - c.a) * sum.b;
                 }
+
+                pixels[i] = (rgba_8i) {
+                    .r = CLAMP(sum.r * 255, 0, 255),
+                    .g = CLAMP(sum.g * 255, 0, 255),
+                    .b = CLAMP(sum.b * 255, 0, 255),
+                    .a = 255,
+                };
             }
 
-            char name[256];
-            snprintf(name, 256, "./results/result%i.png", iangle);
-            int res = stbi_write_png(name, RES_X, RES_Y, 4, image, RES_X * sizeof(rgba_8i));
-            printf("Wrote %s\n", name);
-            assert(res != 0);
-        }
-    }
+            // Send results to rank=0
+            if (rank == 0) {
+                rgba_8i* buffer = calloc(run.count, sizeof(rgba_8i));
+                for (int r = 1; r < size; r++) {
+                    MPI_Status status;
+                    MPI_Recv(buffer, run.count * 4, MPI_INT8_T, MPI_ANY_SOURCE, iangle, MPI_COMM_WORLD, &status);
 
-    assert(H5close() >= 0);
+                    run_t node_run = rank_to_run(status.MPI_SOURCE, size);
+
+                    assert(status.MPI_TAG == iangle);
+
+                    // Copy image pixels into place.
+                    memcpy(&pixels[node_run.start], buffer, node_run.count * sizeof(rgba_8i));
+                }
+
+                mkdir("results", 0777);
+                
+                char name[256];
+                snprintf(name, 256, "./results/result%i.png", iangle);
+                int res = stbi_write_png(name, RES_X, RES_Y, 4, pixels, RES_X * sizeof(rgba_8i));
+                printf("Wrote %s\n", name);
+                assert(res != 0);
+            } else {
+                // Send data to rank 0.
+                MPI_Send(pixels, run.count * 4, MPI_INT8_T, 0, iangle, MPI_COMM_WORLD);
+            }
+        }
+
+        free(pixels);
+    }
+    
+    MPI_Finalize();
+
     return ret_val;
 }
 

@@ -1,0 +1,11 @@
+
+volume_render:15389 terminated with signal 6 at PC=7f6dde00f9fc SP=7ffc4e675780.  Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c)[0x7f6dde00f9fc]
+/lib/x86_64-linux-gnu/libc.so.6(raise+0x16)[0x7f6dddfbb476]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3)[0x7f6dddfa17f3]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2871b)[0x7f6dddfa171b]
+/lib/x86_64-linux-gnu/libc.so.6(+0x39e96)[0x7f6dddfb2e96]
+./volume_render(+0x12a40)[0x55d4a55bba40]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x7f6dddfa2d90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x7f6dddfa2e40]
+./volume_render(+0x12c35)[0x55d4a55bbc35]

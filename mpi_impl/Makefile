@@ -7,7 +7,7 @@ HDF5_STATIC_LIB := ../hdf5-1.14.3/hdf5/lib/libhdf5.a ../hdf5-1.14.3/hdf5/lib/lib
 
 SRCS := main.c ${HDF5_STATIC_LIB}
 
-CC := cc
+CC := mpicc
 CCFlags := -o $(BINARY)
 CCFlags := $(CCFlags) -O2
 CCFlags := $(CCFlags) -Wall -W
@@ -15,6 +15,7 @@ CCFlags := $(CCFlags) -lm -lz
 CCFlags := $(CCFlags) -I$(HDF5_INCLUDE_DIR)
 # FIXME: Only add this for debug?
 CCFlags := $(CCFlags) -g
+#CCFlags := $(CCFlags) -fopenmp
 
 compile: $(SRCS)
 	$(CC) $(SRCS) $(CCFlags)

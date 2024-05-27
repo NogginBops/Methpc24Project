@@ -164,6 +164,7 @@ int main() {
             float angle = 2 * M_PI * (iangle / (float)NAngles);
 
             // now I have the datacube!
+            #pragma omp parallel for
             for (int ix = 0; ix < RES_X; ix++) {
                 int x = ix - RES_X/2;
                 for (int iy = 0; iy < RES_Y; iy++) {
