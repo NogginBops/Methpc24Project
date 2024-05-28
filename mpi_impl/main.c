@@ -241,14 +241,11 @@ int main(int argc, char *argv[]) {
 
             // Send results to rank=0
             if (rank == 0) {
-                rgba_8i* buffer = calloc(run.count, sizeof(rgba_8i));
                 for (int r = 1; r < size; r++) {
                     MPI_Status status;
                     MPI_Recv(buffer, run.count * 4, MPI_INT8_T, MPI_ANY_SOURCE, iangle, MPI_COMM_WORLD, &status);
 
                     run_t node_run = rank_to_run(status.MPI_SOURCE, size);
-
-                    assert(status.MPI_TAG == iangle);
 
                     // Copy image pixels into place.
                     memcpy(&pixels[node_run.start], buffer, node_run.count * sizeof(rgba_8i));
