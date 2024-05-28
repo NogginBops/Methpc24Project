@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
                 mkdir("results", 0777);
                 
                 char name[256];
-                snprintf(name, 256, "./results/result%i.png", iangle);
+                snprintf(name, 256, "./results/result%03i.png", iangle);
                 int res = stbi_write_png(name, RES_X, RES_Y, 4, pixels, RES_X * sizeof(rgba_8i));
                 printf("Wrote %s\n", name);
                 assert(res != 0);

@@ -161,7 +161,7 @@ int main() {
     {
         hsize_t dims[3];
         float* data = read_hdf5_data("../data/datacube.hdf5", "density", dims);
-
+        
         printf("Starting render.\n");
 
         interpolate_grid(data, dims, 0.1f, 0.5f, 0.0f);
@@ -212,7 +212,7 @@ int main() {
             mkdir("results", 0777);
 
             char name[256];
-            snprintf(name, 256, "./results/result%i.png", iangle);
+            snprintf(name, 256, "./results/result%03i.png", iangle);
             int res = stbi_write_png(name, RES_X, RES_Y, 4, image, RES_X * sizeof(rgba_8i));
             printf("Wrote %s\n", name);
             assert(res != 0);
