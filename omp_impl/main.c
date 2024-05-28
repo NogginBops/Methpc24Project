@@ -174,10 +174,10 @@ int main() {
 
             // now I have the datacube!
             #pragma omp parallel for
-            for (int ix = 0; ix < RES_X; ix++) {
-                float x = ((ix / (RES_X - 1.0f)) - 0.5f) * (dims[0] * SCALE);
-                for (int iy = 0; iy < RES_Y; iy++) {
-                    float y = ((iy / (RES_Y - 1.0f)) - 0.5f) * (dims[1] * SCALE);
+            for (int iy = 0; iy < RES_Y; iy++) {
+                float y = ((iy / (RES_Y - 1.0f)) - 0.5f) * (dims[1] * SCALE);
+                for (int ix = 0; ix < RES_X; ix++) {
+                    float x = ((ix / (RES_X - 1.0f)) - 0.5f) * (dims[0] * SCALE);
 
                     rgba_32f sum = {0};
                     for (int iz = RES_Z - 1; iz >= 0; iz--) {
@@ -213,7 +213,7 @@ int main() {
             mkdir("results", 0777);
 
             char name[256];
-            snprintf(name, 256, "./results/result%i.png", iangle);
+            snprintf(name, 256, "./results/result%03i.png", iangle);
             int res = stbi_write_png(name, RES_X, RES_Y, 4, image, RES_X * sizeof(rgba_8i));
             printf("Wrote %s\n", name);
             assert(res != 0);
