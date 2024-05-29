@@ -358,7 +358,7 @@ int main() {
 
         rgba_8i* image = calloc(RES_X * RES_Y, sizeof(rgba_8i));
         
-        const int NAngles = 1;
+        const int NAngles = 24;
         cl_mem result_images[NAngles];
         for (int iangle = 0; iangle < NAngles; iangle++) {
             float angle = 2 * M_PI * (iangle / (float)NAngles);
