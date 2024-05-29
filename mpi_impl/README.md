@@ -7,6 +7,8 @@ The paths to the hdf5 library comes from `h5cc -show`, to get `h5cc` on ubuntu i
 The HDF5 library can be downloaded from: https://www.hdfgroup.org/downloads/hdf5 and can be built using their build instructions.
 To use your own build of HDF5 you need to replace the flags in the make file with your own `h5cc -show` result.
 
+To build this project the `libhdf5-dev` package needs to be installed.
+
 ## Building
 
 To build, simply run `make`.
