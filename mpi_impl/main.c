@@ -49,23 +49,23 @@ float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
     hsize_t size;
     herr_t err = H5Fget_filesize(file, &size);
     assert(err >= 0);
-    printf("File size: %llu bytes\n", size);
+    //printf("File size: %llu bytes\n", size);
 
     hid_t dataset = H5Dopen2(file, dataset_name, H5P_DEFAULT);
     assert(dataset != H5I_INVALID_HID);
 
     hsize_t storage_size = H5Dget_storage_size(dataset);
-    printf("storage_size=%llu\n", storage_size);
+    //printf("storage_size=%llu\n", storage_size);
     
     hid_t datatype = H5Dget_type(dataset);
     assert(datatype != H5I_INVALID_HID);
 
     size_t datatype_size = H5Tget_size(datatype);
-    printf("datatype_size=%lu\n", datatype_size);
+    //printf("datatype_size=%lu\n", datatype_size);
     assert(datatype_size == 4);
 
     H5T_class_t datatype_class = H5Tget_class(datatype);
-    switch (datatype_class)
+    /*switch (datatype_class)
     {
         case H5T_NO_CLASS:  printf("No class\n");  break;
         case H5T_INTEGER:   printf("Integer\n");   break;
@@ -80,7 +80,7 @@ float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
         case H5T_VLEN:      printf("Vlen\n");      break;
         case H5T_ARRAY:     printf("Array\n");     break;
         default:            printf("Unknown\n");   break;
-    }
+    }*/
     assert(datatype_class == H5T_FLOAT);
 
     hid_t space = H5Dget_space(dataset);
@@ -95,7 +95,7 @@ float *read_hdf5_data(char *filepath, char *dataset_name, hsize_t dims[3]) {
     float* data = malloc(storage_size);
     assert(H5Dread(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) >= 0);
 
-    printf("Read data %id (%llix%llix%lli)\n", rank, dims[0], dims[1], dims[2]);
+    //printf("Read data %id (%llix%llix%lli)\n", rank, dims[0], dims[1], dims[2]);
 
     H5Dclose(dataset);
     H5Fclose(file);
@@ -174,10 +174,10 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    printf("Hello, world! rank=%d, size=%d\n", rank, size);
+    //printf("Hello, world! rank=%d, size=%d\n", rank, size);
 
     run_t run = rank_to_run(rank, size);
-    printf("rank=%d run=%d, %d\n", rank, run.start, run.count);
+    //printf("rank=%d run=%d, %d\n", rank, run.start, run.count);
 
     int ret_val = 0;
     assert(H5open() >= 0);
