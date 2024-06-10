@@ -21,3 +21,9 @@ The project consists of four directories.
 `mpi_impl/` contains an MPI implementation (using mpich).  See [`mpi_impl/README.md`](/mpi_impl/README.md) for more info.
 
 `data/` contains the hdf5 datacube that is rendered. Copied from Philip Mocz's original project.
+
+## Compiling on PDC Dardel
+
+The C, OpenMP, and MPI version are possible to compile on PDC Dardel.
+
+To compile on PDC Dardel the make files need to patched to contain the correct link paths for the HDF5 library and MPICH library. These changes are contained in the [`pdc_dardel.patch`](./pdc_dardel.patch) file that can be applied to compile on dardel.
