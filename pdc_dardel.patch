@@ -1,0 +1,158 @@
+diff --git a/c_impl/Makefile b/c_impl/Makefile
+index f246c26..2939d98 100644
+--- a/c_impl/Makefile
++++ b/c_impl/Makefile
+@@ -4,7 +4,7 @@ BINARY = volume_render
+ 
+ SRCS := main.c
+ 
+-CC := h5cc
++CC := cc
+ CCFlags := -o $(BINARY)
+ CCFlags := $(CCFlags) -O2
+ CCFlags := $(CCFlags) -Wall -W
+@@ -13,11 +13,10 @@ CCFlags := $(CCFlags) -lm -lz
+ CCFlags := $(CCFlags) -g
+ 
+ # From h5cc -show
+-CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
+-
++CCFlags := $(CCFlags) -I/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/include/ -L/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/ /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5_hl.a /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5.a -lcrypto -lcurl -lpthread -lz -ldl -lm -Wl,-rpath -Wl,/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/
+ 
+ compile: $(SRCS)
+ 	$(CC) $(CCFlags) $(ARG_FLAGS) $(SRCS)
+ 
+ clean:
+-	@rm $(BINARY)
+\ No newline at end of file
++	@rm $(BINARY)
+diff --git a/c_impl/main.c b/c_impl/main.c
+index dc86258..fc9ad41 100644
+--- a/c_impl/main.c
++++ b/c_impl/main.c
+@@ -5,7 +5,7 @@
+ #include <assert.h>
+ #include <sys/stat.h>
+ 
+-#include <hdf5/serial/hdf5.h>
++#include <hdf5.h>
+ 
+ #define STB_IMAGE_WRITE_IMPLEMENTATION
+ #include "stb_image_write.h"
+diff --git a/mpi_impl/Makefile b/mpi_impl/Makefile
+index d237bb7..3124b4c 100644
+--- a/mpi_impl/Makefile
++++ b/mpi_impl/Makefile
+@@ -13,11 +13,10 @@ CCFlags := $(CCFlags) -lm -lz
+ CCFlags := $(CCFlags) -g
+ 
+ # From h5cc -show
+-CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
+-
++CCFlags := $(CCFlags) -I/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/include/ -L/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/ /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5_hl.a /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5.a -lcrypto -lcurl -lpthread -lz -ldl -lm -Wl,-rpath -Wl,/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/
+ 
+ compile: $(SRCS)
+ 	$(CC) $(SRCS) $(ARG_FLAGS) $(CCFlags)
+ 
+ clean:
+-	@rm $(BINARY)
+\ No newline at end of file
++	@rm $(BINARY)
+diff --git a/mpi_impl/main.c b/mpi_impl/main.c
+index ba0a0ef..a780f07 100644
+--- a/mpi_impl/main.c
++++ b/mpi_impl/main.c
+@@ -7,7 +7,7 @@
+ 
+ #include <mpi.h>
+ 
+-#include <hdf5/serial/hdf5.h>
++#include <hdf5.h>
+ 
+ #define STB_IMAGE_WRITE_IMPLEMENTATION
+ #include "stb_image_write.h"
+@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
+ 
+         rgba_8i* pixels = rank == 0 ? calloc(RES_X * RES_Y, sizeof(rgba_8i)) : calloc(run.count, sizeof(rgba_8i));
+ 
+-        const int NAngles = 24;
++        const int NAngles = 1;
+         for (int iangle = 0; iangle < NAngles; iangle++) {
+             float angle = 2 * M_PI * (iangle / (float)NAngles);
+ 
+diff --git a/ocl_impl/Makefile b/ocl_impl/Makefile
+index 7e71d68..220c76b 100644
+--- a/ocl_impl/Makefile
++++ b/ocl_impl/Makefile
+@@ -6,7 +6,7 @@ BINARY = volume_render
+ 
+ SRCS := main.c
+ 
+-CC := h5cc
++CC := cc
+ CCFlags := -o $(BINARY)
+ CCFlags := $(CCFlags)
+ CCFlags := $(CCFlags) -Wall -W
+@@ -15,7 +15,9 @@ CCFlags := $(CCFlags) -lm -lz -lOpenCL
+ CCFlags := $(CCFlags) -g
+ 
+ # From h5cc -show
+-CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
++#CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
++
++CCFlags := $(CCFlags) -I/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/include/ -L/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/ /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5_hl.a /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5.a -lcrypto -lcurl -lpthread -lz -ldl -lm -Wl,-rpath -Wl,/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/
+ 
+ all: $(BINARY)
+ 
+@@ -26,4 +28,4 @@ run: $(BINARY)
+ 	$(BINARY)
+ 
+ clean:
+-	@rm $(BINARY)
+\ No newline at end of file
++	@rm $(BINARY)
+diff --git a/ocl_impl/main.c b/ocl_impl/main.c
+index 67ef17b..3b9fde7 100644
+--- a/ocl_impl/main.c
++++ b/ocl_impl/main.c
+@@ -5,7 +5,7 @@
+ #include <assert.h>
+ #include <sys/stat.h>
+ 
+-#include <hdf5/serial/hdf5.h>
++#include <hdf5.h>
+ 
+ #define STB_IMAGE_WRITE_IMPLEMENTATION
+ #include "stb_image_write.h"
+diff --git a/omp_impl/Makefile b/omp_impl/Makefile
+index 42aba1c..b0e4ed4 100644
+--- a/omp_impl/Makefile
++++ b/omp_impl/Makefile
+@@ -14,11 +14,10 @@ CCFlags := $(CCFlags) -g
+ CCFlags := $(CCFlags) -fopenmp
+ 
+ # From h5cc -show
+-CCFlags := $(CCFlags) -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_hl.a /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.a -lcrypto -lcurl -lpthread -lsz -lz -ldl -lm -Wl,-rpath -Wl,/usr/lib/x86_64-linux-gnu/hdf5/serial
+-
++CCFlags := $(CCFlags) -I/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/include/ -L/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/ /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5_hl.a /opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/libhdf5.a -lcrypto -lcurl -lpthread -lz -ldl -lm -Wl,-rpath -Wl,/opt/cray/pe/hdf5/1.12.2.9/crayclang/17.0/lib/
+ 
+ compile: $(SRCS)
+ 	$(CC) $(SRCS) $(ARG_FLAGS) $(CCFlags)
+ 
+ clean:
+-	@rm $(BINARY)
+\ No newline at end of file
++	@rm $(BINARY)
+diff --git a/omp_impl/main.c b/omp_impl/main.c
+index 8c836c0..d39b860 100644
+--- a/omp_impl/main.c
++++ b/omp_impl/main.c
+@@ -5,7 +5,7 @@
+ #include <assert.h>
+ #include <sys/stat.h>
+ 
+-#include <hdf5/serial/hdf5.h>
++#include <hdf5.h>
+ 
+ #define STB_IMAGE_WRITE_IMPLEMENTATION
+ #include "stb_image_write.h"
